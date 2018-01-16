@@ -23,7 +23,13 @@ proxy.on('open', function (proxySocket) {
             return;
         }
         var index = string.indexOf('[')
-        var arr = JSON.parse(string.slice(index))
+        var arr;
+        try{
+            arr = JSON.parse(string.slice(index))
+        }catch(e){
+            openBrowser(string)
+            return;
+        }
         debug('json解析出来的数据 %j', arr)
         var tag = arr[0]
         var data = arr[1]
@@ -117,6 +123,17 @@ function queryAnswer(data) {
     })
 
     // childProcess.exec("open " + encodeURI(queryUrl));
+}
+
+function openBrowser(str){
+
+    let queryUrl2 = encodeURI( "https://www.baidu.com/s?wd=" + str)
+    execa.shell("open " + queryUrl2).catch(e => {
+        return execa.shell("explorer " + queryUrl2)
+    }).catch(e=>{
+        console.error(e)
+    })
+
 }
 
 function urlParse(url){
