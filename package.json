@@ -1,13 +1,13 @@
 {
-  "name": "net-util",
+  "name": "@lingxiorg/net-util",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "bin": {
-    "cddh": "./bin/reverseProxy.js"
+    "cddh": "./bin/reverse-proxy.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "patch": "npm version patch && npm publish"
   },
   "author": "lingximu",
   "license": "ISC",
