@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const http = require('http'),
+    execa = require('execa')
     net = require('net'),
     url = require('url'),
     util = require('util'),
@@ -10,7 +11,7 @@ const http = require('http'),
     childProcess = require("child_process");
 
 let questionSet = {},
-    port = 8016;
+    port = 8015;
 
 var proxy = new httpProxy.createProxyServer();
 
@@ -90,7 +91,7 @@ console.log('监控%i端口',port)
 proxyServer.listen(port);
 
 function queryAnswer(data) {
-    debug('即将查询答案 %j', data)
+    debug('queryAnswer接收的数据 %j', data)
     let { desc, options, questionId } = data
     if (!questionId) {
         debug('没有questionId，返回')
@@ -99,6 +100,8 @@ function queryAnswer(data) {
         debug('将requestid对应的数据存起来 %j', questionId)
         questionSet[questionId] = data;
     }
+    console.debug('即将查询答案 %j', data)
+
     let query = desc
     options = JSON.parse(options)
     for (var i = 0; i < 3; i++) {
@@ -106,7 +109,14 @@ function queryAnswer(data) {
     }
     let queryUrl = "https://www.baidu.com/s?wd=" + query;
     debug('查询 %s', queryUrl)
-    childProcess.exec("open " + encodeURI(queryUrl));
+    let queryUrl2 = encodeURI(queryUrl)
+    execa.shell("open " + queryUrl2).catch(e => {
+        return execa.shell("explorer " + queryUrl2)
+    }).catch(e=>{
+        console.error(e)
+    })
+
+    // childProcess.exec("open " + encodeURI(queryUrl));
 }
 
 function urlParse(url){
