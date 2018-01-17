@@ -113,20 +113,36 @@ function queryAnswer(data) {
     for (var i = 0; i < 3; i++) {
         query += (' ' + options[i] + ' ')
     }
-    let queryUrl = "https://www.baidu.com/s?wd=" + query;
-    debug('查询 %s', queryUrl)
-    let queryUrl2 = encodeURI(queryUrl)
-    execa.shell("open " + queryUrl2).catch(e => {
-        return execa.shell("explorer " + queryUrl2)
-    }).catch(e=>{
-        console.error(e)
-    })
+    let queryUrl1 = "https://www.baidu.com/s?wd=" + query;
+    let queryUrl2 = "https://www.baidu.com/s?wd=" + desc;
+    debug('查询问题和答案 %s', queryUrl1)
+    debug('查询问题 %s', queryUrl2)
+    let encodeQueryUrl1 = encodeURI(queryUrl1)
+    let encodeQueryUrl2 = encodeURI(queryUrl2)
 
+    // 先只查问题
+    queryInBrowser(encodeQueryUrl2);
+    // 再查问题+答案
+    queryInBrowser(encodeQueryUrl1);
+
+    function queryInBrowser(url) {
+        execa.shell("open " + url).catch(e => {
+            return execa.shell("explorer " + url);
+        }).catch(e => {
+            console.error(e);
+        });
+    }
     // childProcess.exec("open " + encodeURI(queryUrl));
 }
 
 function openBrowser(str){
+    debug('openBrowser接收的数据 %s',str)
+    var index = str.indexOf('showQuestion');
+    if (index > -1){
+        str = str.slice(index + 20)
+    }else{
 
+    }
     let queryUrl2 = encodeURI( "https://www.baidu.com/s?wd=" + str)
     execa.shell("open " + queryUrl2).catch(e => {
         return execa.shell("explorer " + queryUrl2)
@@ -141,7 +157,7 @@ function urlParse(url){
         let urlObj = url.parse(url)
         return [ urlObj.hostname, urlObj.port || 80 ]
     }
-    const hostname = /\/\/([^/]+)\//.exec(url)[1]
+    const hostname = /\/\/([^/]+)\/?/.exec(url)[1]
     let [host, port] = hostname.split(':')
     if (!port) {
         if (/https/.test(url)) {
