@@ -2,11 +2,11 @@
 
 const http = require('http'),
     execa = require('execa')
-    net = require('net'),
+net = require('net'),
     url = require('url'),
     util = require('util'),
     debug = require('debug')('proxyStudy:bin:reverseProxy')
-    httpProxy = require('http-proxy'),
+httpProxy = require('http-proxy'),
     { TextDecoder } = require('text-encoding'),
     childProcess = require("child_process");
 
@@ -19,14 +19,14 @@ proxy.on('open', function (proxySocket) {
     debug('触发open事件')
     proxySocket.on('data', function (data) {
         var string = new TextDecoder("utf-8").decode(data);
-        if(string.indexOf('showQuestion') === -1 && string.indexOf('showAnswer') === -1){
+        if (string.indexOf('showQuestion') === -1 && string.indexOf('showAnswer') === -1) {
             return;
         }
         var index = string.indexOf('[')
         var arr;
-        try{
+        try {
             arr = JSON.parse(string.slice(index))
-        }catch(e){
+        } catch (e) {
             openBrowser(string)
             return;
         }
@@ -46,7 +46,7 @@ proxy.on('open', function (proxySocket) {
 })
 
 var proxyServer = http.createServer(function (req, res) {
-    debug('请求的特定地址 %s',req.url)
+    debug('请求的特定地址 %s', req.url)
     // debug(req)
     // proxy.web(req, res, {target: req.url});
     // return;
@@ -62,18 +62,21 @@ var proxyServer = http.createServer(function (req, res) {
 
 
 proxyServer.on('connect', function (req, socket, head) {
-    debug('请求一个https请求 %s',req.url)
+    debug('请求一个https请求 %s', req.url)
 
     var serverUrl = url.parse('https://' + req.url);
 
-    var srvSocket = net.connect(serverUrl.port, serverUrl.hostname, function() {
-      socket.write('HTTP/1.1 200 Connection Established\r\n' +
-      '\r\n');
-      srvSocket.write(head);
-      srvSocket.pipe(socket);
-      socket.pipe(srvSocket);
+    var srvSocket = net.connect(serverUrl.port, serverUrl.hostname, function () {
+        socket.write('HTTP/1.1 200 Connection Established\r\n' +
+            '\r\n');
+        head && srvSocket.write(head);
+        srvSocket.pipe(socket);
+        socket.pipe(srvSocket);
+        srvSocket.on('error', (e) => {
+            console.error('net connect 请求出错 [url]%s [error]', req.url, e)
+        })
     });
-  });
+});
 
 proxyServer.on('upgrade', function (req, socket, head) {
     debug('upgrade事件 [req] %o [socket] %o [head] %o', req, socket, head)
@@ -93,7 +96,7 @@ proxyServer.on('upgrade', function (req, socket, head) {
     }, 10);
 });
 
-console.log('监控%i端口',port)
+console.log('监控%i端口', port)
 proxyServer.listen(port);
 
 function queryAnswer(data) {
@@ -135,27 +138,27 @@ function queryAnswer(data) {
     // childProcess.exec("open " + encodeURI(queryUrl));
 }
 
-function openBrowser(str){
-    debug('openBrowser接收的数据 %s',str)
+function openBrowser(str) {
+    debug('openBrowser接收的数据 %s', str)
     var index = str.indexOf('showQuestion');
-    if (index > -1){
+    if (index > -1) {
         str = str.slice(index + 20)
-    }else{
+    } else {
 
     }
-    let queryUrl2 = encodeURI( "https://www.baidu.com/s?wd=" + str)
+    let queryUrl2 = encodeURI("https://www.baidu.com/s?wd=" + str)
     execa.shell("open " + queryUrl2).catch(e => {
         return execa.shell("explorer " + queryUrl2)
-    }).catch(e=>{
+    }).catch(e => {
         console.error(e)
     })
 
 }
 
-function urlParse(url){
-    if(url.indexOf('http') === -1){
+function urlParse(url) {
+    if (url.indexOf('http') === -1) {
         let urlObj = url.parse(url)
-        return [ urlObj.hostname, urlObj.port || 80 ]
+        return [urlObj.hostname, urlObj.port || 80]
     }
     const hostname = /\/\/([^/]+)\/?/.exec(url)[1]
     let [host, port] = hostname.split(':')
@@ -165,7 +168,7 @@ function urlParse(url){
         } else {
             port = 80
         }
-    }else{
+    } else {
         port = parseInt(port)
     }
     return [host, port]
