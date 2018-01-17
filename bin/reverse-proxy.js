@@ -20,6 +20,7 @@ const http = require('http'),
 let questionSet = {},
     port = 8015;
 
+/*
 var proxy = new httpProxy.createProxyServer();
 
 proxy.on('open', function (proxySocket) {
@@ -51,9 +52,18 @@ proxy.on('open', function (proxySocket) {
         }
     })
 })
+*/
 
 var proxyServer = http.createServer(function (req, res) {
     debug('请求的特定地址 %s', req.url)
+
+
+    var proxy = new httpProxy.createProxyServer();
+
+    proxy.on('error', (e) => {
+        console.error('proxy web error %o', e)
+    })
+
     let [host, port] = urlParse(req.url)
     proxy.web(req, res, {
         target: {
@@ -62,7 +72,6 @@ var proxyServer = http.createServer(function (req, res) {
         }
     });
 });
-
 
 proxyServer.on('connect', function (req, socket, head) {
     debug('请求一个https请求 %s', req.url)
@@ -75,14 +84,55 @@ proxyServer.on('connect', function (req, socket, head) {
         head && srvSocket.write(head);
         srvSocket.pipe(socket);
         socket.pipe(srvSocket);
-        srvSocket.on('error', (e) => {
-            console.error('net connect 请求出错 [url]%s [error]', req.url, e)
-        })
     });
+    srvSocket.on('error', (e) => {
+        console.error('net connect srvSocket 请求出错 [url]%s [error]', req.url, e)
+    })
+    socket.on('error', (e) => {
+        console.error('net connect socket 请求出错 [url]%s [error]', req.url, e)
+    })
+
 });
 
 proxyServer.on('upgrade', function (req, socket, head) {
-    debug('upgrade事件 [req] %o [socket] %o [head] %o', req, socket, head)
+    debug('upgrade事件 [req.url] %s  [head] %o', req.url, head)
+
+    var proxy = new httpProxy.createProxyServer();
+
+    proxy.on('open', function (proxySocket) {
+        debug('触发open事件')
+        proxySocket.on('data', function (data) {
+            var string = new TextDecoder("utf-8").decode(data);
+            if (string.indexOf('showQuestion') === -1 && string.indexOf('showAnswer') === -1) {
+                return;
+            }
+            var index = string.indexOf('[')
+            var arr;
+            try {
+                arr = JSON.parse(string.slice(index))
+            } catch (e) {
+                openBrowser(string)
+                return;
+            }
+            debug('json解析出来的数据 %j', arr)
+            var tag = arr[0]
+            var data = arr[1]
+
+            if (tag.trim() === 'showQuestion') {
+                debug('问题出现')
+                queryAnswer(data)
+            } else if (tag.trim() === 'showAnswer') {
+                debug('答案出现')
+            } else {
+                debug('其他情况 %j', string)
+            }
+        })
+    })
+
+    proxy.on('error', (e) => {
+        console.error('proxy ws error %o', e)
+    })
+
     let [host, port] = urlParse(req.url)
     setTimeout(() => {
         proxy.ws(req, socket, {
