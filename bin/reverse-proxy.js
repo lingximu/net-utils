@@ -3,7 +3,7 @@
 const updateNotifier = require('update-notifier');
 const pkg = require('../package.json');
 
-updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 60 }).notify();
+updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 30 }).notify();
 
 const http = require('http'),
     execa = require('execa'),
