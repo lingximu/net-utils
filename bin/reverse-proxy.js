@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
+const updateNotifier = require('update-notifier');
+const pkg = require('../package.json');
+
+updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 60 }).notify();
+
 const http = require('http'),
-    execa = require('execa')
-net = require('net'),
+    execa = require('execa'),
+    net = require('net'),
     url = require('url'),
     util = require('util'),
-    debug = require('debug')('proxyStudy:bin:reverseProxy')
-httpProxy = require('http-proxy'),
+    debug = require('debug')('proxyStudy:bin:reverseProxy'),
+    httpProxy = require('http-proxy'),
     { TextDecoder } = require('text-encoding'),
     childProcess = require("child_process");
 
@@ -47,11 +52,7 @@ proxy.on('open', function (proxySocket) {
 
 var proxyServer = http.createServer(function (req, res) {
     debug('请求的特定地址 %s', req.url)
-    // debug(req)
-    // proxy.web(req, res, {target: req.url});
-    // return;
     let [host, port] = urlParse(req.url)
-    // const arr = /http:\/\/([^:]+):([^\/]+)/.exec(req.url)
     proxy.web(req, res, {
         target: {
             host: host,
@@ -80,11 +81,6 @@ proxyServer.on('connect', function (req, socket, head) {
 
 proxyServer.on('upgrade', function (req, socket, head) {
     debug('upgrade事件 [req] %o [socket] %o [head] %o', req, socket, head)
-    /*
-        setTimeout(function () {
-            proxy.ws(req, socket, head);
-        }, 1000);
-    */
     let [host, port] = urlParse(req.url)
     setTimeout(() => {
         proxy.ws(req, socket, {
@@ -123,10 +119,10 @@ function queryAnswer(data) {
     let encodeQueryUrl1 = encodeURI(queryUrl1)
     let encodeQueryUrl2 = encodeURI(queryUrl2)
 
-    // 先只查问题
-    queryInBrowser(encodeQueryUrl2);
     // 再查问题+答案
     queryInBrowser(encodeQueryUrl1);
+    // 先只查问题
+    queryInBrowser(encodeQueryUrl2);
 
     function queryInBrowser(url) {
         execa.shell("open " + url).catch(e => {
@@ -135,7 +131,6 @@ function queryAnswer(data) {
             console.error(e);
         });
     }
-    // childProcess.exec("open " + encodeURI(queryUrl));
 }
 
 function openBrowser(str) {
