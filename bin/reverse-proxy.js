@@ -7,6 +7,11 @@ updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 30 }).notify({
     isGlobal: true
 });
 
+if (process.env.NODE_ENV === 'development') {
+    console.log('在开发环境，引入longjohn')
+    require('longjohn');
+}
+
 const http = require('http'),
     execa = require('execa'),
     net = require('net'),
@@ -164,12 +169,12 @@ function queryAnswer(data) {
     for (var i = 0; i < 3; i++) {
         query += (' ' + options[i] + ' ')
     }
-    let queryUrl1 = "https://www.baidu.com/s?wd=" + query;
-    let queryUrl2 = "https://www.baidu.com/s?wd=" + desc;
+    let queryUrl1 = "https://www.baidu.com/s?wd=" + encodeURIComponent(query);
+    let queryUrl2 = "https://www.baidu.com/s?wd=" + encodeURIComponent(desc);
     debug('查询问题和答案 %s', queryUrl1)
     debug('查询问题 %s', queryUrl2)
-    let encodeQueryUrl1 = encodeURI(queryUrl1)
-    let encodeQueryUrl2 = encodeURI(queryUrl2)
+    let encodeQueryUrl1 = queryUrl1
+    let encodeQueryUrl2 = queryUrl2
 
     // 再查问题+答案
     queryInBrowser(encodeQueryUrl1);
@@ -178,6 +183,7 @@ function queryAnswer(data) {
 
     function queryInBrowser(url) {
         execa.shell("open " + url).catch(e => {
+            console.error('186 open挂了 %o',e)
             return execa.shell("explorer " + url);
         }).catch(e => {
             console.error(e);
@@ -195,6 +201,7 @@ function openBrowser(str) {
     }
     let queryUrl2 = encodeURI("https://www.baidu.com/s?wd=" + str)
     execa.shell("open " + queryUrl2).catch(e => {
+        console.error('204 open挂了 %o', e)
         return execa.shell("explorer " + queryUrl2)
     }).catch(e => {
         console.error(e)
