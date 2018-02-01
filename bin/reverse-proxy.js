@@ -162,7 +162,7 @@ function queryAnswer(data) {
         debug('将requestid对应的数据存起来 %j', questionId)
         questionSet[questionId] = data;
     }
-    console.debug('即将查询答案 %j', data)
+    console.info('即将查询答案 %j', data)
 
     let query = desc
     options = JSON.parse(options)
