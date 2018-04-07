@@ -3,10 +3,11 @@
 const updateNotifier = require('update-notifier');
 const pkg = require('../package.json');
 
+// 版本升级检测和通知
 updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 30 }).notify({
     isGlobal: true
 });
-
+// 开发环境引入异步堆栈抓取工具
 if (process.env.NODE_ENV === 'development') {
     console.log('在开发环境，引入longjohn')
     require('longjohn');
@@ -78,6 +79,7 @@ var proxyServer = http.createServer(function (req, res) {
     });
 });
 
+// https请求
 proxyServer.on('connect', function (req, socket, head) {
     debug('请求一个https请求 %s', req.url)
 
@@ -99,6 +101,7 @@ proxyServer.on('connect', function (req, socket, head) {
 
 });
 
+// websocket请求
 proxyServer.on('upgrade', function (req, socket, head) {
     debug('upgrade事件 [req.url] %s  [head] %o', req.url, head)
 
